@@ -1,0 +1,123 @@
+[gd_scene load_steps=16 format=4 uid="uid://bmlia8l5ghf04"]
+
+[ext_resource type="Script" uid="uid://cnp7hnolxnmfb" path="res://scripts/testing_scene/test_stuff.gd" id="1_afj2h"]
+[ext_resource type="Script" uid="uid://cdyslc17trm2e" path="res://scripts/level_generation/LevelGenerationConfig.gd" id="2_n1fm3"]
+[ext_resource type="Script" uid="uid://bk0oqy8xcjn7w" path="res://scripts/level/Level.gd" id="3_kg4pj"]
+[ext_resource type="Script" uid="uid://rf66u8ek1act" path="res://scripts/entities/EntityDef.gd" id="4_n1fm3"]
+[ext_resource type="TileSet" uid="uid://drfn1y3sjt37y" path="res://resources/tilesets/tileset.tres" id="4_yxdlq"]
+[ext_resource type="Script" uid="uid://bj54aiqfic88d" path="res://scripts/entities/EntityGroup.gd" id="5_kg4pj"]
+[ext_resource type="TileSet" uid="uid://d1bf0siag5gof" path="res://resources/tilesets/WallTiles.tres" id="5_o8nx4"]
+[ext_resource type="Script" uid="uid://btocpdsvx0w53" path="res://scripts/level_generation/level_generator.gd" id="6_2mfrk"]
+[ext_resource type="Script" uid="uid://ib0xpisqeumq" path="res://scripts/tiles/TileLibrary.gd" id="8_ghmy6"]
+[ext_resource type="Texture2D" uid="uid://uxavgpljcxi7" path="res://sprites/LightTexture.png" id="9_afj2h"]
+[ext_resource type="Script" uid="uid://drmhg0ekjqv2c" path="res://scripts/entities/EntityLibrary.gd" id="10_n1fm3"]
+
+[sub_resource type="Resource" id="Resource_p57ef"]
+script = ExtResource("2_n1fm3")
+level_size = Vector2i(23, 13)
+edge_count_min = 1
+edge_count_max = 4
+edge_width_min = 1
+edge_width_max = 2
+corridor_width_min = 1
+corridor_width_max = 1
+road_width_min = 0
+road_width_max = 2
+building_count_min = 1
+building_count_max = 2
+min_room_size = 2
+min_corridor_cut_len = 4
+outside_merge_prob = 0.02
+road_and_edge_merge_prob = 1.0
+corridor_merge_prob = 1.0
+room_merge_prob = 0.4
+corridor_prob = 0.5
+max_room_merge_count = 6
+start_inside = false
+vault_rooms_min = 1
+vault_rooms_max = 1
+metadata/_custom_type_script = "uid://cdyslc17trm2e"
+
+[sub_resource type="Resource" id="Resource_kg4pj"]
+script = ExtResource("4_n1fm3")
+id = "door"
+weight = 1.0
+min_security_level = 0
+max_security_level = 999
+metadata/_custom_type_script = "uid://rf66u8ek1act"
+
+[sub_resource type="Resource" id="Resource_yxdlq"]
+script = ExtResource("5_kg4pj")
+name = "doors"
+entities = Array[ExtResource("4_n1fm3")]([SubResource("Resource_kg4pj")])
+metadata/_custom_type_script = "uid://bj54aiqfic88d"
+
+[sub_resource type="Resource" id="Resource_afj2h"]
+script = ExtResource("10_n1fm3")
+entity_groups = Array[ExtResource("5_kg4pj")]([SubResource("Resource_yxdlq")])
+metadata/_custom_type_script = "uid://drmhg0ekjqv2c"
+
+[node name="TestGame" type="Node2D"]
+script = ExtResource("1_afj2h")
+level_generation_config = SubResource("Resource_p57ef")
+
+[node name="Level" type="Node2D" parent="."]
+script = ExtResource("3_kg4pj")
+entity_library = SubResource("Resource_afj2h")
+metadata/_custom_type_script = "uid://bk0oqy8xcjn7w"
+
+[node name="TileLayer" type="TileMapLayer" parent="Level"]
+position = Vector2(8, 8)
+tile_map_data = PackedByteArray("AAACAAEAAAAFAAoAAAADAAEAAAAGAAoAAAAGAAQAAAAKAAoAAAAKAAIAAAAEAAIAAAAHAAEAAAAAAAAAAAAIAAEAAAABAAAAAAAJAAEAAAABAAAAAAAKAAEAAAADAAAAAAAIAAMAAAAIAAAAAFAFAAIAAAAHAAAAADAFAAEAAAACAAAAAAAAAAYAAAAAAAIAAAAAAAUAAAAAAAIAAAAAAAQAAAAAAAIAAAADAAYAAAADAAAAAAAFAAgAAAADAAAAAAAHAAYAAAAJAAAAAAAJAAgAAAAFAAAAAAALAAUAAAAFAAAAAFAHAAkAAAAEAAAAAAAMAAcAAAACAAIAAAAMAAMAAAAEAAIAAAAOAAUAAAADAAIAAAA=")
+tile_set = ExtResource("4_yxdlq")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="WallLayer" type="TileMapLayer" parent="Level"]
+position = Vector2(4, 4)
+tile_map_data = PackedByteArray("AAD//wAAAAADABwAAAABAAAAAAADABwAAAAAAAAAAQAOAAYAAAAAAP7/AQAOAAYAAAA=")
+tile_set = ExtResource("5_o8nx4")
+y_sort_origin = 1
+collision_enabled = false
+navigation_enabled = false
+
+[node name="HighlightLayer" type="TileMapLayer" parent="Level"]
+position = Vector2(8, 8)
+
+[node name="LevelGenerator" type="Node" parent="Level"]
+script = ExtResource("6_2mfrk")
+use_fixed = null
+metadata/_custom_type_script = "uid://btocpdsvx0w53"
+
+[node name="TileLibrary" type="Node" parent="Level" node_paths=PackedStringArray("tilemap_layer")]
+script = ExtResource("8_ghmy6")
+tilemap_layer = NodePath("../WallLayer")
+metadata/_custom_type_script = "uid://ib0xpisqeumq"
+
+[node name="Entities" type="Node2D" parent="Level"]
+
+[node name="EntityLibrary" type="Node" parent="Level"]
+script = ExtResource("10_n1fm3")
+metadata/_custom_type_script = "uid://drmhg0ekjqv2c"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(-8, 8)
+offset = Vector2(200, 100)
+zoom = Vector2(5, 5)
+
+[node name="DungeonDrawTimer" type="Timer" parent="."]
+wait_time = 0.05
+autostart = true
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.469346, 0.625821, 0.721611, 1)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(23, 191)
+color = Color(1, 0.307478, 0.200551, 1)
+energy = 2.87
+shadow_enabled = true
+texture = ExtResource("9_afj2h")
+
+[connection signal="new_split_made" from="Level/LevelGenerator" to="." method="_on_level_generator_new_split_made"]
+[connection signal="timeout" from="DungeonDrawTimer" to="." method="_on_dungeon_draw_timer_timeout"]

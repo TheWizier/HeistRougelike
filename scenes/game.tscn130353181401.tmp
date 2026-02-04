@@ -1,0 +1,90 @@
+[gd_scene load_steps=13 format=4 uid="uid://br38t5jh37pbs"]
+
+[ext_resource type="Script" uid="uid://cnp7hnolxnmfb" path="res://scripts/testing_scene/test_stuff.gd" id="1_lbhrr"]
+[ext_resource type="TileSet" uid="uid://drfn1y3sjt37y" path="res://resources/tilesets/tileset.tres" id="2_iywne"]
+[ext_resource type="Script" uid="uid://bk0oqy8xcjn7w" path="res://scripts/level/Level.gd" id="2_p57ef"]
+[ext_resource type="TileSet" uid="uid://d1bf0siag5gof" path="res://resources/tilesets/WallTiles.tres" id="4_lbhrr"]
+[ext_resource type="Script" uid="uid://btocpdsvx0w53" path="res://scenes/level_generator.gd" id="5_iywne"]
+[ext_resource type="Script" uid="uid://cdyslc17trm2e" path="res://scripts/level_generation/LevelGenerationConfig.gd" id="6_p57ef"]
+[ext_resource type="Script" uid="uid://d30uhbvksybx0" path="res://scenes/tile_library_component.gd" id="7_u5sy4"]
+[ext_resource type="Script" uid="uid://ib0xpisqeumq" path="res://scripts/tiles/TileLibrary.gd" id="8_0tnpc"]
+[ext_resource type="Script" uid="uid://p13cfwemstb2" path="res://scripts/tiles/TileDef.gd" id="9_vtaks"]
+
+[sub_resource type="Resource" id="Resource_p57ef"]
+script = ExtResource("6_p57ef")
+level_size = Vector2i(35, 20)
+edge_count_min = 1
+edge_count_max = 4
+edge_width_min = 1
+edge_width_max = 2
+corridor_width_min = 1
+corridor_width_max = 1
+road_width_min = 0
+road_width_max = 2
+building_count_min = 1
+building_count_max = 2
+min_room_size = 2
+min_corridor_cut_len = 4
+outside_merge_prob = 0.02
+road_and_edge_merge_prob = 1.0
+corridor_merge_prob = 0.9
+room_merge_prob = 0.4
+corridor_prob = 0.5
+metadata/_custom_type_script = "uid://cdyslc17trm2e"
+
+[sub_resource type="Resource" id="Resource_kvpfn"]
+script = ExtResource("9_vtaks")
+tile_source_id = 0
+tile_atlas_coords = Vector2i(0, 0)
+tile_alternative_tile = 0
+is_walkable = false
+is_see_through = false
+metadata/_custom_type_script = "uid://p13cfwemstb2"
+
+[sub_resource type="Resource" id="Resource_dinhu"]
+script = ExtResource("8_0tnpc")
+wall = SubResource("Resource_kvpfn")
+metadata/_custom_type_script = "uid://ib0xpisqeumq"
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_lbhrr")
+level_generation_config = SubResource("Resource_p57ef")
+
+[node name="Level" type="Node2D" parent="."]
+script = ExtResource("2_p57ef")
+metadata/_custom_type_script = "uid://bk0oqy8xcjn7w"
+
+[node name="TileLayer" type="TileMapLayer" parent="Level"]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAABAAAAAAABAPz/AAADAAEAAAAFAP3/AAACAAEAAAAEAP7/AAACAAEAAFAEAP3/AAABAAEAAGAGAAEAAAABAAEAAGAGAAIAAAABAAEAADAHAAEAAAABAAEAAAAHAAIAAAABAAEAAFA=")
+tile_set = ExtResource("2_iywne")
+collision_enabled = false
+navigation_enabled = false
+
+[node name="WallLayer" type="TileMapLayer" parent="Level"]
+position = Vector2(4, 4)
+tile_map_data = PackedByteArray("AAD//wAAAAADABwAAAD//wEAAAAFAB0AAAAAAAEAAAADABwAAFD/////AAADABsAAAABAAEAAAADABsAAFD///3/AAADABsAADD///7/AAAOAA8AAAABAAMAAAAdABkAAAACAAMAAAAeABkAAAADAAMAAAAdABkAAFACAAQAAAAeABoAAAADAAQAAAAeABkAAFABAAQAAAAeABkAAGACAAUAAAAeABkAADADAAUAAAAdABkAADABAAUAAAAbAB0AACABAAYAAAADABwAAAABAAcAAAADABsAADAEAAcAAAADABwAAQAFAAcAAAADABwAAVA=")
+tile_set = ExtResource("4_lbhrr")
+y_sort_origin = 1
+collision_enabled = false
+navigation_enabled = false
+
+[node name="HighlightLayer" type="TileMapLayer" parent="Level"]
+
+[node name="LevelGenerator" type="Node" parent="Level"]
+script = ExtResource("5_iywne")
+metadata/_custom_type_script = "uid://btocpdsvx0w53"
+
+[node name="TileLibraryComponent" type="Node" parent="Level"]
+script = ExtResource("7_u5sy4")
+tile_library = SubResource("Resource_dinhu")
+metadata/_custom_type_script = "uid://d30uhbvksybx0"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(5, 5)
+
+[node name="DungeonDrawTimer" type="Timer" parent="."]
+wait_time = 0.05
+autostart = true
+
+[connection signal="new_split_made" from="Level/LevelGenerator" to="." method="_on_level_generator_new_split_made"]
+[connection signal="timeout" from="DungeonDrawTimer" to="." method="_on_dungeon_draw_timer_timeout"]

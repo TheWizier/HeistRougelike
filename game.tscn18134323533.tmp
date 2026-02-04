@@ -1,0 +1,74 @@
+[gd_scene load_steps=5 format=3 uid="uid://br38t5jh37pbs"]
+
+[ext_resource type="Script" uid="uid://cwfbbim6tid6h" path="res://tilemap_manager.gd" id="1_80nbo"]
+[ext_resource type="Texture2D" uid="uid://cwrlo600kbqif" path="res://sprites/HeistSprites.png" id="2_e2o6t"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_feb5d"]
+texture = ExtResource("2_e2o6t")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+4:2/0 = 0
+1:10/0 = 0
+2:10/0 = 0
+3:10/0 = 0
+4:10/0 = 0
+5:10/0 = 0
+6:10/0 = 0
+7:10/0 = 0
+8:10/0 = 0
+10:10/0 = 0
+0:13/0 = 0
+1:13/0 = 0
+2:13/0 = 0
+3:13/0 = 0
+4:13/0 = 0
+5:13/0 = 0
+6:13/0 = 0
+7:13/0 = 0
+8:13/0 = 0
+0:14/0 = 0
+1:14/0 = 0
+2:14/0 = 0
+3:14/0 = 0
+4:14/0 = 0
+5:14/0 = 0
+6:14/0 = 0
+7:14/0 = 0
+8:14/0 = 0
+1:15/0 = 0
+2:15/0 = 0
+3:15/0 = 0
+4:15/0 = 0
+5:15/0 = 0
+6:15/0 = 0
+7:15/0 = 0
+8:15/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_fc0e3"]
+sources/0 = SubResource("TileSetAtlasSource_feb5d")
+
+[node name="Game" type="Node2D"]
+
+[node name="Tilemap" type="Node2D" parent="."]
+script = ExtResource("1_80nbo")
+
+[node name="TileLayer" type="TileMapLayer" parent="Tilemap"]
+tile_map_data = PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
+tile_set = SubResource("TileSet_fc0e3")
+
+[node name="EdgeLayer" type="TileMapLayer" parent="Tilemap"]
