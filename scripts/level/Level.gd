@@ -8,7 +8,6 @@ class_name Level extends Node2D
 @onready var tile_library: Node = $TileLibrary
 
 var level_data: LevelData
-@export var entity_library: EntityLibrary
 
 enum TileTransform {
 	ROTATE_0 = 0,

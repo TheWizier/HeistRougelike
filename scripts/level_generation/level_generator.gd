@@ -42,13 +42,18 @@ func generate_level(config: LevelGenerationConfig, tile_library: TileLibrary) ->
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.ROOM, config.room_merge_prob)
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.CORRIDOR, config.corridor_merge_prob)
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.ROAD, 1)
-	var player_spawn_pos := choose_start_pos(level_nodes, config.start_inside)
-	var portal_locations: Array[Vector2i] = choose_portal_locations()
-	choose_vault_rooms(level_nodes, config.vault_rooms_min, config.vault_rooms_max)
-	set_up_security_levels()
-	place_portals(portal_locations)
-	
+	set_up_security_levels(level_nodes)
 	var level_data := populate_level_data(level_nodes, config, tile_library)
+	var portal_locations: Array[Vector2i] = choose_portal_locations(
+		level_nodes,
+		level_data,
+		config.portal_placement_percentage,
+		config.portal_repair_chance,
+	)
+	var player_spawn_pos := choose_start_pos(level_nodes, config.start_inside)
+	# choose_vault_rooms(level_nodes, config.vault_rooms_min, config.vault_rooms_max) # TODO needs change now that it is after populate
+	place_portals(level_data, portal_locations, tile_library)
+	
 	
 	return level_data
 
@@ -79,59 +84,66 @@ func add_missing_walls(level_data: LevelData, area: AreaNode, wall_tile: TileDef
 						level_data.grid.set_cell(wall_pos, Tile.new(wall_tile, rotation))
 
 
-func place_corners(level_data: LevelData, tile_library: TileLibrary) -> void:
-	var expanded_size = level_data.grid.size
+static func _get_tile_for_corner(level_data: LevelData, pos: Vector2i, tile_library: TileLibrary, allow_pillar: bool = false) -> Tile:
+	# Neighbor flags [up, right, down, left]
+	var neighbors = [
+		level_data.has_tile_at(pos + Vector2i(0, -1)),
+		level_data.has_tile_at(pos + Vector2i(1, 0)),
+		level_data.has_tile_at(pos + Vector2i(0, 1)),
+		level_data.has_tile_at(pos + Vector2i(-1, 0))
+	]
+
+	# Encode neighbors as bitmask: U=1, R=2, D=4, L=8
+	var mask = 0
+	for i in range(4):
+		if neighbors[i]:
+			mask |= 1 << i
+
 	# Lookup table: mask -> (tile_name, rotation)
 	var lookup = {
-		0b0001: ["corner_1", Tile.TileTransforms.ROTATE_0],   # up only
-		0b0010: ["corner_1", Tile.TileTransforms.ROTATE_90],  # right only
-		0b0100: ["corner_1", Tile.TileTransforms.ROTATE_180], # down only
-		0b1000: ["corner_1", Tile.TileTransforms.ROTATE_270], # left only
+		0b0001: ["corner_1", Tile.TileTransforms.ROTATE_0],
+		0b0010: ["corner_1", Tile.TileTransforms.ROTATE_90],
+		0b0100: ["corner_1", Tile.TileTransforms.ROTATE_180],
+		0b1000: ["corner_1", Tile.TileTransforms.ROTATE_270],
 
-		0b0011: ["corner_2", Tile.TileTransforms.ROTATE_0],   # up+right
-		0b0110: ["corner_2", Tile.TileTransforms.ROTATE_90],  # right+down
-		0b1100: ["corner_2", Tile.TileTransforms.ROTATE_180], # down+left
-		0b1001: ["corner_2", Tile.TileTransforms.ROTATE_270], # left+up
+		0b0011: ["corner_2", Tile.TileTransforms.ROTATE_0],
+		0b0110: ["corner_2", Tile.TileTransforms.ROTATE_90],
+		0b1100: ["corner_2", Tile.TileTransforms.ROTATE_180],
+		0b1001: ["corner_2", Tile.TileTransforms.ROTATE_270],
 
-		0b0111: ["corner_3", Tile.TileTransforms.ROTATE_0],   # up+right+down, missing left
-		0b1110: ["corner_3", Tile.TileTransforms.ROTATE_90],  # right+down+left, missing up
-		0b1101: ["corner_3", Tile.TileTransforms.ROTATE_180], # down+left+up, missing right
-		0b1011: ["corner_3", Tile.TileTransforms.ROTATE_270], # left+up+right, missing down
+		0b0111: ["corner_3", Tile.TileTransforms.ROTATE_0],
+		0b1110: ["corner_3", Tile.TileTransforms.ROTATE_90],
+		0b1101: ["corner_3", Tile.TileTransforms.ROTATE_180],
+		0b1011: ["corner_3", Tile.TileTransforms.ROTATE_270],
 
-		0b1111: ["corner_4", Tile.TileTransforms.ROTATE_0],    # all four walls
-		
+		0b1111: ["corner_4", Tile.TileTransforms.ROTATE_0],
+		0b0000: ["wall_block", Tile.TileTransforms.ROTATE_0],
+
 		0b0101: ["wall", Tile.TileTransforms.ROTATE_0],
 		0b1010: ["wall", Tile.TileTransforms.ROTATE_90],
 	}
 
+	if mask == 0 and not allow_pillar:
+		return null
+
+	var info = lookup.get(mask, null)
+	if info == null:
+		return null
+
+	var tile_name = info[0]
+	var rotation = info[1]
+
+	return Tile.new(tile_library.lib[tile_name], rotation)
+
+
+func place_corners(level_data: LevelData, tile_library: TileLibrary) -> void:
+	var expanded_size = level_data.grid.size
 	for y in range(0, expanded_size.y, 2):
 		for x in range(0, expanded_size.x, 2):
 			var pos = Vector2i(x, y)
+			var tile = _get_tile_for_corner(level_data, pos, tile_library)
+			level_data.grid.set_cell(pos, tile)
 
-			# Neighbor flags [up, right, down, left]
-			var neighbors = [
-				level_data.has_tile_at(pos + Vector2i(0, -1)),
-				level_data.has_tile_at(pos + Vector2i(1, 0)),
-				level_data.has_tile_at(pos + Vector2i(0, 1)),
-				level_data.has_tile_at(pos + Vector2i(-1, 0))
-			]
-
-			# Encode neighbors as bitmask: U=1, R=2, D=4, L=8
-			var mask = 0
-			for i in range(4):
-				if neighbors[i]:
-					mask |= 1 << i
-
-			# Count number of walls
-			var wall_count = neighbors.count(true)
-			if wall_count == 0:
-				continue # Nothing to place
-
-			var info = lookup[mask]
-			var tile_name = info[0]
-			var rotation = info[1]
-
-			level_data.grid.set_cell(pos, Tile.new(tile_library.lib[tile_name], rotation))
 
 func populate_level_data(level_nodes: Array[AreaNode], config: LevelGenerationConfig, tile_library: TileLibrary) -> LevelData:
 	var level_data := LevelData.new(config.level_size)
@@ -176,14 +188,89 @@ func choose_vault_rooms(level_nodes: Array[AreaNode], vault_rooms_min, vault_roo
 		rooms[i].area_type = AreaTypes.Type.VAULT
 		
 
-func set_up_security_levels():
-	pass # TODO
+func set_up_security_levels(level_nodes: Array[AreaNode]):
+	for area in level_nodes:
+		area.security_level = randi_range(0,3)
+		# TODO: Update this to use config
+		# TODO: How can I configure the distibution?
 
-func generate_portals(level_nodes: Array[AreaNode]):
-	pass # TODO
-	# pick random connections
-	# repair with probability (to achieve reachability_prob)
-	# Choose portal type (Might need to set security levels on rooms first
+static func get_affected_corner_positions(wall_pos: Vector2i) -> Array[Vector2i]:
+	# vertical wall: x even, y odd
+	if wall_pos.x % 2 == 0:
+		return [
+			wall_pos + Vector2i(0, -1),
+			wall_pos + Vector2i(0,  1),
+		]
+	# horizontal wall: x odd, y even
+	else:
+		return [
+			wall_pos + Vector2i(-1, 0),
+			wall_pos + Vector2i( 1, 0),
+		]
+
+func place_portals(level_data: LevelData, portal_locations: Array[Vector2i], tile_library: TileLibrary):
+	for pos in portal_locations:
+		level_data.grid.set_cell(pos, null)
+		# Recalculate corners
+		for corner in get_affected_corner_positions(pos):
+			var tile = _get_tile_for_corner(level_data, corner, tile_library)
+			level_data.grid.set_cell(corner, tile)
+
+func choose_portal_locations(
+	level_nodes: Array[AreaNode],
+	level_data: LevelData,
+	portal_placement_percentage: float,
+	portal_repair_chance: float,
+) -> Array[Vector2i]:
+	var candidates := collect_portal_candidates(level_data)
+	candidates.shuffle()
+	
+	var union_find = UnionFind.new()
+	for area in level_nodes:
+		union_find.add(area)
+	
+	var chosen: Array[Vector2i] = []
+	var placement_count := int(candidates.size() * portal_placement_percentage)
+	
+	# Place random portals
+	for i in range(placement_count):
+		var candidate: PortalCandidate = candidates[i]
+		chosen.append(candidate.wall_pos)
+		union_find.union(candidate.area_a, candidate.area_b)
+	
+	# repair with probability (to achieve portal_repair_chance)
+	for i in range(placement_count, candidates.size()):
+		var candidate: PortalCandidate = candidates[i]
+		if not union_find.connected(candidate.area_a, candidate.area_b):
+			if randf() < portal_repair_chance:
+				chosen.append(candidate.wall_pos)
+				union_find.union(candidate.area_a, candidate.area_b)
+	return chosen
+	
+func collect_portal_candidates(level_data: LevelData) -> Array[PortalCandidate]:
+	var candidates: Array[PortalCandidate] = []
+
+	for y in range(level_data.logical_size.y):
+		for x in range(level_data.logical_size.x):
+			var pos := Vector2i(x, y)
+			var area_a := level_data.get_logical_tile_owner(pos)
+			if area_a == null:
+				continue
+
+			for dir in [Facing.Direction.RIGHT, Facing.Direction.DOWN]:
+				var npos := pos + Facing.to_vector(dir)
+				if not level_data.is_in_bounds(npos):
+					continue
+
+				var area_b := level_data.get_logical_tile_owner(npos)
+				if area_b == null or area_a == area_b:
+					continue
+
+				var wall_pos := LevelData._get_between(pos, npos)
+				if level_data.grid.get_cell(wall_pos) != null:
+					candidates.append(PortalCandidate.new(wall_pos, area_a, area_b))
+
+	return candidates
 
 func rects_share_edge(a: Rect2i, b: Rect2i) -> bool:
 	# Vertical edge touch

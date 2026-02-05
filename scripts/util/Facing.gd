@@ -7,7 +7,7 @@ enum Direction {
 	LEFT
 }
 
-static func to_vector(dir: Direction):
+static func to_vector(dir: Direction) -> Vector2i:
 	match dir:
 		Direction.UP:
 			return Vector2i.UP
@@ -17,3 +17,5 @@ static func to_vector(dir: Direction):
 			return Vector2i.LEFT
 		Direction.RIGHT:
 			return Vector2i.RIGHT
+		_:
+			return Vector2i.ZERO

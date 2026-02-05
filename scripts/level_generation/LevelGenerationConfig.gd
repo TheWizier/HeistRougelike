@@ -17,11 +17,14 @@ class_name LevelGenerationConfig extends Resource
 @export var min_corridor_cut_len: int = 4
 
 @export var outside_merge_prob: float = 0.02
-@export var road_and_edge_merge_prob: float = 1
+@export var road_and_edge_merge_prob: float = 1.0
 @export var corridor_merge_prob: float = 0.9
 @export var room_merge_prob: float = 0.4
 @export var corridor_prob: float = 0.5
 @export var max_room_merge_count = 6
+
+@export var portal_placement_percentage: float = 0.125
+@export var portal_repair_chance: float = 1.0
 
 @export var start_inside: bool = false
 

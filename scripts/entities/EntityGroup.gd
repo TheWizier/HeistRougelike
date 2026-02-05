@@ -17,9 +17,5 @@ func pick_random(
 
 	if candidates.is_empty():
 		return null
-		
-	var weigths: Array[int] = []
-	for canditdate in candidates:
-		weigths.append(canditdate.weight)
-		
-	return Utils.weighted_choice(candidates, weigths)
+	
+	return Utils.weighted_choice_by(candidates, func(x): return x.weight)

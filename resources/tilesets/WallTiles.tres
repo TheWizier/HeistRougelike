@@ -9,7 +9,7 @@ polygon = PackedVector2Array(-2, -1, -1, -1, -1, -2, 1, -2, 1, -1, 2, -1, 2, 1, 
 polygon = PackedVector2Array(-4, -2, -2, -2, -2, -4, 2, -4, 2, -2, 4, -2, 4, 2, 2, 2, 2, 4, 2, 4, -2, 4, -2, 2, -4, 2)
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_8b78w"]
-polygon = PackedVector2Array(-2, 4, -2, -1, -1, -1, -1, -2, 1, -2, 1, -1, 2, -1, 2, 4)
+polygon = PackedVector2Array(-2, -4, -2, 1, -1, 1, -1, 2, 1, 2, 1, 1, 2, 1, 2, -4)
 
 [sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_agu7q"]
 polygon = PackedVector2Array(-2, -4, 2, -4, 2, 4, -2, 4)
