@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://b4rcr1jpmwm34"]
+
+[ext_resource type="Script" uid="uid://dkui08uhkx71k" path="res://scripts/entities/door.gd" id="1_ewl7v"]
+[ext_resource type="Texture2D" uid="uid://cwrlo600kbqif" path="res://sprites/HeistSprites.png" id="2_htbgl"]
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_hpvv5"]
+polygon = PackedVector2Array(-2, 7, 2, 7, 2, -7, -2, -7)
+
+[node name="Door" type="Node2D"]
+script = ExtResource("1_ewl7v")
+metadata/_custom_type_script = "uid://dkui08uhkx71k"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_htbgl")
+region_enabled = true
+region_rect = Rect2(30, 129, 4, 14)
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="."]
+occluder = SubResource("OccluderPolygon2D_hpvv5")
+
+[node name="Button" type="Button" parent="."]
+modulate = Color(0.06, 1, 0.545667, 1)
+offset_left = -4.0
+offset_top = -7.0
+offset_right = 4.0
+offset_bottom = 7.0
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

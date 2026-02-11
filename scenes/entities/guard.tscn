@@ -1,19 +1,19 @@
 [gd_scene load_steps=4 format=3 uid="uid://rybwvkpqlrsc"]
 
-[ext_resource type="Script" uid="uid://cc1imujos5aqs" path="res://scripts/entities/guard.gd" id="1_m4fl1"]
-[ext_resource type="Texture2D" uid="uid://cwrlo600kbqif" path="res://sprites/HeistSprites.png" id="2_ci2qi"]
-[ext_resource type="Script" uid="uid://busd5lrmkaso1" path="res://scripts/entity_components/vision_component.gd" id="3_k0dx2"]
+[ext_resource type="Script" uid="uid://cc1imujos5aqs" path="res://scripts/entities/guard.gd" id="1_c4p50"]
+[ext_resource type="Texture2D" uid="uid://cwrlo600kbqif" path="res://sprites/HeistSprites.png" id="2_aka77"]
+[ext_resource type="Script" uid="uid://busd5lrmkaso1" path="res://scripts/entity_components/vision_component.gd" id="3_j4jik"]
 
 [node name="Guard" type="Node2D" node_paths=PackedStringArray("vision_component")]
-script = ExtResource("1_m4fl1")
+script = ExtResource("1_c4p50")
 vision_component = NodePath("VisionComponent")
 metadata/_custom_type_script = "uid://cc1imujos5aqs"
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_ci2qi")
+texture = ExtResource("2_aka77")
 region_enabled = true
 region_rect = Rect2(112, 0, 16, 16)
 
 [node name="VisionComponent" type="Node2D" parent="."]
-script = ExtResource("3_k0dx2")
+script = ExtResource("3_j4jik")
 metadata/_custom_type_script = "uid://busd5lrmkaso1"

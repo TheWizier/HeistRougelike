@@ -6,6 +6,8 @@ class_name Level extends Node2D
 
 @onready var level_generator: LevelGenerator = $LevelGenerator
 @onready var tile_library: Node = $TileLibrary
+@onready var entity_library: EntityLibrary = $EntityLibrary
+@onready var entities_root: Node2D = $Entities
 
 var level_data: LevelData
 
@@ -16,8 +18,8 @@ enum TileTransform {
 	ROTATE_270 = TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V,
 }
 
-func grid_to_local(pos: Vector2i):
-	return wall_layer_tilemap.map_to_local(pos)
+func grid_to_global(pos: Vector2i):
+	return wall_layer_tilemap.to_global(wall_layer_tilemap.map_to_local(pos))
 
 func draw_grid() -> void:
 	wall_layer_tilemap.clear()
@@ -34,4 +36,4 @@ func draw_grid() -> void:
 
 
 func generate_new_level(config: LevelGenerationConfig):
-	level_data = level_generator.generate_level(config, tile_library)
+	level_data = level_generator.generate_level(config, tile_library, entity_library, entities_root, self)

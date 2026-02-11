@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://bmlia8l5ghf04"]
+[gd_scene load_steps=11 format=4 uid="uid://bmlia8l5ghf04"]
 
 [ext_resource type="Script" uid="uid://cnp7hnolxnmfb" path="res://scripts/testing_scene/test_stuff.gd" id="1_afj2h"]
 [ext_resource type="Script" uid="uid://cdyslc17trm2e" path="res://scripts/level_generation/LevelGenerationConfig.gd" id="2_n1fm3"]
@@ -8,10 +8,7 @@
 [ext_resource type="Script" uid="uid://btocpdsvx0w53" path="res://scripts/level_generation/level_generator.gd" id="6_2mfrk"]
 [ext_resource type="Script" uid="uid://ib0xpisqeumq" path="res://scripts/tiles/TileLibrary.gd" id="8_ghmy6"]
 [ext_resource type="Texture2D" uid="uid://uxavgpljcxi7" path="res://sprites/LightTexture.png" id="9_afj2h"]
-[ext_resource type="Script" uid="uid://bj54aiqfic88d" path="res://scripts/entities/meta/EntityGroup.gd" id="9_yxdlq"]
-[ext_resource type="PackedScene" uid="uid://b4rcr1jpmwm34" path="res://scenes/entities/door.tscn" id="10_kg4pj"]
 [ext_resource type="Script" uid="uid://drmhg0ekjqv2c" path="res://scripts/entities/meta/EntityLibrary.gd" id="10_n1fm3"]
-[ext_resource type="Script" uid="uid://rf66u8ek1act" path="res://scripts/entities/meta/EntityDef.gd" id="10_o8nx4"]
 
 [sub_resource type="Resource" id="Resource_p57ef"]
 script = ExtResource("2_n1fm3")
@@ -41,21 +38,6 @@ vault_rooms_min = 1
 vault_rooms_max = 1
 metadata/_custom_type_script = "uid://cdyslc17trm2e"
 
-[sub_resource type="Resource" id="Resource_2mfrk"]
-script = ExtResource("10_o8nx4")
-id = "door"
-scene = ExtResource("10_kg4pj")
-weight = 1.0
-min_security_level = 0
-max_security_level = 999
-metadata/_custom_type_script = "uid://rf66u8ek1act"
-
-[sub_resource type="Resource" id="Resource_mpa1w"]
-script = ExtResource("9_yxdlq")
-name = "doors"
-entities = Array[ExtResource("10_o8nx4")]([SubResource("Resource_2mfrk")])
-metadata/_custom_type_script = "uid://bj54aiqfic88d"
-
 [node name="TestGame" type="Node2D"]
 script = ExtResource("1_afj2h")
 level_generation_config = SubResource("Resource_p57ef")
@@ -65,23 +47,21 @@ script = ExtResource("3_kg4pj")
 metadata/_custom_type_script = "uid://bk0oqy8xcjn7w"
 
 [node name="TileLayer" type="TileMapLayer" parent="Level"]
-visible = false
 position = Vector2(8, 8)
-tile_map_data = PackedByteArray("AAAGAAQAAAAKAAoAAAAKAAIAAAAEAAIAAAAHAAEAAAAAAAAAAAAIAAEAAAABAAAAAAAJAAEAAAABAAAAAAAKAAEAAAADAAAAAAAIAAMAAAAIAAAAAFAFAAIAAAAHAAAAADAFAAEAAAACAAAAAAAAAAYAAAAAAAIAAAAAAAUAAAAAAAIAAAAAAAQAAAAAAAIAAAADAAYAAAADAAAAAAAFAAgAAAADAAAAAAAHAAYAAAAJAAAAAAAJAAgAAAAFAAAAAAALAAUAAAAFAAAAAFAHAAkAAAAEAAAAAAAMAAcAAAACAAIAAAAMAAMAAAAEAAIAAAAOAAUAAAADAAIAAAA=")
+tile_map_data = PackedByteArray("AAACAAEAAAAFAAoAAAADAAEAAAAGAAoAAAAGAAQAAAAKAAoAAAAKAAIAAAAEAAIAAAAHAAEAAAAAAAAAAAAIAAEAAAABAAAAAAAJAAEAAAABAAAAAAAKAAEAAAADAAAAAAAIAAMAAAAIAAAAAFAFAAIAAAAHAAAAADAFAAEAAAACAAAAAAAAAAYAAAAAAAIAAAAAAAUAAAAAAAIAAAAAAAQAAAAAAAIAAAADAAYAAAADAAAAAAAFAAgAAAADAAAAAAAHAAYAAAAJAAAAAAAJAAgAAAAFAAAAAAALAAUAAAAFAAAAAFAHAAkAAAAEAAAAAAAMAAcAAAACAAIAAAAMAAMAAAAEAAIAAAAOAAUAAAADAAIAAAA=")
 tile_set = ExtResource("4_yxdlq")
 collision_enabled = false
 navigation_enabled = false
 
 [node name="WallLayer" type="TileMapLayer" parent="Level"]
 position = Vector2(4, 4)
-tile_map_data = PackedByteArray("AAD//wAAAAABAB0AAAABAAAAAAABAB0AAAAAAAAAAAABAB0AAAAAAP7/AQAOAAYAAAAAAP//AAABAB0AAAABAP//AAABAB0AAAACAP//AAABAB0AAAD//wEAAAABAB0AAAD//wIAAAABAB0AAAACAAAAAAABAB0AAAAAAAEAAAABAB0AAAAAAAIAAAABAB0AAAA=")
+tile_map_data = PackedByteArray("AAD//wAAAAADABwAAAABAAAAAAADABwAAAAAAAAAAQAOAAYAAAAAAP7/AQAOAAYAAAA=")
 tile_set = ExtResource("5_o8nx4")
 y_sort_origin = 1
 collision_enabled = false
 navigation_enabled = false
 
 [node name="HighlightLayer" type="TileMapLayer" parent="Level"]
-visible = false
 position = Vector2(8, 8)
 
 [node name="LevelGenerator" type="Node" parent="Level"]
@@ -97,7 +77,6 @@ metadata/_custom_type_script = "uid://ib0xpisqeumq"
 
 [node name="EntityLibrary" type="Node" parent="Level"]
 script = ExtResource("10_n1fm3")
-entity_groups = Array[ExtResource("9_yxdlq")]([SubResource("Resource_mpa1w")])
 metadata/_custom_type_script = "uid://drmhg0ekjqv2c"
 
 [node name="Camera2D" type="Camera2D" parent="."]
@@ -118,11 +97,6 @@ color = Color(1, 0.307478, 0.200551, 1)
 energy = 2.87
 shadow_enabled = true
 texture = ExtResource("9_afj2h")
-
-[node name="Door" parent="." node_paths=PackedStringArray("level") instance=ExtResource("10_kg4pj")]
-position = Vector2(0, 8)
-pos = Vector2i(8, 9)
-level = NodePath("../Level")
 
 [connection signal="new_split_made" from="Level/LevelGenerator" to="." method="_on_level_generator_new_split_made"]
 [connection signal="timeout" from="DungeonDrawTimer" to="." method="_on_dungeon_draw_timer_timeout"]

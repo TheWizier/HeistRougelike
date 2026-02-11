@@ -6,7 +6,7 @@ var pathing_manager: PathingManager
 
 @export var level_generation_config: LevelGenerationConfig
 
-var guard_scene = preload("res://scenes/guard.tscn")
+var guard_scene = preload("res://scenes/entities/guard.tscn")
 
 var info: BSPGraph
 var visualization_draw_queue: Array[Array] = []

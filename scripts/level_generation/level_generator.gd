@@ -34,7 +34,14 @@ func validate_config(config: LevelGenerationConfig):
 	
 	assert(config.level_size.x > min_required_size and config.level_size.y > min_required_size)
 	
-func generate_level(config: LevelGenerationConfig, tile_library: TileLibrary) -> LevelData:
+func generate_level(
+	config: LevelGenerationConfig,
+	tile_library: TileLibrary,
+	entity_library: EntityLibrary,
+	entities_root: Node2D,
+	level: Level
+) -> LevelData:
+	# --- BSP Generation ---
 	var bsp_leaves: Array[BSPAreaNode] = generate_level_BSP(config).get_leaf_nodes()
 	var level_nodes: Array[AreaNode] = bsp_leaves_to_area_nodes(bsp_leaves)
 	build_area_node_neighbors(level_nodes)
@@ -42,6 +49,8 @@ func generate_level(config: LevelGenerationConfig, tile_library: TileLibrary) ->
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.ROOM, config.room_merge_prob)
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.CORRIDOR, config.corridor_merge_prob)
 	merge_random_nodes_of_same_type(level_nodes, AreaTypes.Type.ROAD, 1)
+	
+	# --- Tiles ---
 	set_up_security_levels(level_nodes)
 	var level_data := populate_level_data(level_nodes, config, tile_library)
 	var portal_locations: Array[Vector2i] = choose_portal_locations(
@@ -53,6 +62,9 @@ func generate_level(config: LevelGenerationConfig, tile_library: TileLibrary) ->
 	var player_spawn_pos := choose_start_pos(level_nodes, config.start_inside)
 	# choose_vault_rooms(level_nodes, config.vault_rooms_min, config.vault_rooms_max) # TODO needs change now that it is after populate
 	place_portals(level_data, portal_locations, tile_library)
+	
+	# --- Entities ---
+	place_doors(level_data, portal_locations, entity_library, entities_root, level)
 	
 	
 	return level_data
@@ -215,6 +227,106 @@ func place_portals(level_data: LevelData, portal_locations: Array[Vector2i], til
 		for corner in get_affected_corner_positions(pos):
 			var tile = _get_tile_for_corner(level_data, corner, tile_library)
 			level_data.grid.set_cell(corner, tile)
+
+func _has_extra_neighbours(
+	pos: Vector2i,
+	exclude: Vector2i,
+	portal_locations: Array[Vector2i],
+	level_data: LevelData,
+	corner_offset: Vector2i,
+	axis_offset: Vector2i
+) -> bool:
+	for direction in [1, -1]:
+		var corner_between: Vector2i = pos + corner_offset * direction
+		var neighbour: Vector2i = pos + axis_offset * direction
+		if neighbour == exclude:
+			continue
+		var corner_missing: bool = level_data.grid.get_cell(corner_between) == null
+		if corner_missing and neighbour in portal_locations:
+			return true
+	return false
+
+
+func _create_entity(
+	pos: Vector2i,
+	entity_def: EntityDef,
+	level_data: LevelData,
+	entities_root: Node2D,
+	level: Level
+) -> Entity:
+	var instance: Entity = entity_def.scene.instantiate()
+	instance.level = level
+	instance.pos = pos
+	level_data.entity_list.append(instance)
+	return instance  # caller sets any additional properties, then adds to tree
+
+
+func _create_door(
+	pos: Vector2i,
+	facing: Facing.Direction,
+	door_entity_def: EntityDef,
+	level_data: LevelData,
+	entities_root: Node2D,
+	level: Level
+) -> void:
+	var door := _create_entity(pos, door_entity_def, level_data, entities_root, level)
+	door.facing = facing
+	entities_root.add_child(door)  # _ready() fires here, after facing is set
+
+
+func _random_facing(is_vertical: bool) -> Facing.Direction:
+	var options: Array = [Facing.Direction.RIGHT, Facing.Direction.LEFT] \
+		if is_vertical else [Facing.Direction.DOWN, Facing.Direction.UP]
+	return options.pick_random()
+
+
+func _opposite_facing(facing: Facing.Direction) -> Facing.Direction:
+	match facing:
+		Facing.Direction.RIGHT: return Facing.Direction.LEFT
+		Facing.Direction.LEFT:  return Facing.Direction.RIGHT
+		Facing.Direction.DOWN:  return Facing.Direction.UP
+		Facing.Direction.UP:    return Facing.Direction.DOWN
+		_:                      return facing
+
+func place_doors(
+	level_data: LevelData,
+	portal_locations: Array[Vector2i],
+	entity_library: EntityLibrary,
+	entities_root: Node2D,
+	level: Level
+) -> void:
+	var placed_portals: Array[Vector2i] = []
+
+	for pos in portal_locations:
+		if pos in placed_portals:
+			continue
+
+		var is_vertical: bool = pos.x % 2 == 0
+		var neighbour_offset: Vector2i = Vector2i(0, 2) if is_vertical else Vector2i(2, 0)
+		var corner_offset: Vector2i = Vector2i(0, 1) if is_vertical else Vector2i(1, 0)
+
+		var adjacent: Array[Vector2i] = []
+		for direction in [1, -1]:
+			var corner_between: Vector2i = pos + corner_offset * direction
+			var neighbour: Vector2i = pos + neighbour_offset * direction
+			var corner_missing: bool = level_data.grid.get_cell(corner_between) == null
+			if corner_missing and neighbour in portal_locations:
+				adjacent.append(neighbour)
+
+		var door_entity_def: EntityDef = entity_library.get_group("doors").pick_random(0)
+
+		if adjacent.size() == 0:
+			_create_door(pos, _random_facing(is_vertical), door_entity_def, level_data, entities_root, level)
+		elif adjacent.size() == 1:
+			var partner_pos: Vector2i = adjacent[0]
+			if not _has_extra_neighbours(partner_pos, pos, portal_locations, level_data, corner_offset, neighbour_offset):
+				var primary_facing: Facing.Direction = _random_facing(is_vertical)
+				_create_door(pos, primary_facing, door_entity_def, level_data, entities_root, level)
+				_create_door(partner_pos, _opposite_facing(primary_facing), door_entity_def, level_data, entities_root, level)
+				placed_portals.append(partner_pos)
+
+		placed_portals.append(pos)
+
 
 func choose_portal_locations(
 	level_nodes: Array[AreaNode],
